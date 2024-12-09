@@ -1,0 +1,85 @@
+import math
+
+
+def func(x):
+    return x + math.log10(x) - 0.5
+
+
+def find_initial_interval(f, start, end, step):
+    a = start
+    while a < end:
+        b = a + step
+        if (f(a) * f(b)) < 0:  # Если метод находит знак переменной
+            return a, b
+        a = b
+    return None
+
+
+def bisection_method(f, a, b, tol):
+    while (b - a) / 2.0 > tol:
+        midpoint = (a + b) / 2.0
+        if f(midpoint) == 0:  # Корень найден
+            return midpoint
+        elif f(a) * f(midpoint) < 0:  # Корень в [a, midpoint]
+            b = midpoint
+        else:  # Корень в [midpoint, b]
+            a = midpoint
+    return (a + b) / 2.0
+
+
+def newton_method(f, deriv, x0, tol=1e-4):
+    return x0 - f(x0) / deriv(x0)
+
+
+def deriv_func(x):
+    return 1 + 1 / (x * math.log(10))
+
+
+def main():
+    # 1. Найти начальный интервал
+    a0, b0 = find_initial_interval(func, 0.1, 2.0, 0.1)
+
+    if a0 is None or b0 is None:
+        print("Не удалось найти интервал.")
+        return
+
+    print(f"Начальный интервал: [{a0}, {b0}]")
+
+    # 2. Инициализация
+    ak, bk = a0, b0
+    tol = 1e-4
+    max_iter = 100
+    x0 = (ak + bk) / 2  # Начальное значение из интервала
+    iter_count = 0
+
+    while iter_count < max_iter:
+        iter_count += 1
+        # 3. Применение метода Ньютона
+        x1 = newton_method(func, deriv_func, x0, tol)
+
+        # Проверка выхода за пределы интервала
+        if x1 < ak or x1 > bk:
+            print(f"Итерация {iter_count}: x1 = {x1}. Используем метод половинного деления.")
+            # Используем метод половинного деления для уточнения
+            x1 = bisection_method(func, ak, bk, tol)
+            print(f"Новый корень после половинного деления: {x1}")
+            return
+
+        # Пересчитываем интервал
+        if func(ak) * func(x1) < 0:
+            bk = x1
+        elif func(bk) * func(x1) < 0:
+            ak = x1
+        else:
+            # Если корень нашелся
+            break
+
+        # Поддерживаем текущий x0 в пределах акк и бк
+        x0 = x1
+
+    print(f"Приближенный корень: {x1}")
+    print(f"Проверка: f({x1}) = {func(x1)}")
+
+
+if __name__ == "__main__":
+    main()
